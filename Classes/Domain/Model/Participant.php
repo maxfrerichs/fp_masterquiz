@@ -318,7 +318,7 @@ class Participant extends AbstractEntity
                 )
                 ->setMaxResults(1)
                 ->executeQuery();
-            while ($row = $statement->fetch()) {
+            while ($row = $statement->fetchAssociative()) {
                 return $row['username'];
             }
             return '';

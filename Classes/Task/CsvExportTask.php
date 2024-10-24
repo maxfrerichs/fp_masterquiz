@@ -217,7 +217,7 @@ class CsvExportTask extends AbstractTask
             )
             ->orderBy('mm.sorting', 'ASC')
             ->executeQuery();
-        while ($row = $statement->fetch()) {
+        while ($row = $statement->fetchAssociative()) {
             if (isset($mmArray[$row['uid_local']])) {
                 $mmArray[$row['uid_local']] .= $answersDelimiter . $row['title'];
             } else {
@@ -256,7 +256,7 @@ class CsvExportTask extends AbstractTask
             ->orderBy('part.uid', 'DESC')
             ->addOrderBy('suid', 'ASC')
             ->executeQuery();
-        while ($row = $statement->fetch()) {
+        while ($row = $statement->fetchAssociative()) {
 
             if ($i > 0)
                 $content .= $ln;

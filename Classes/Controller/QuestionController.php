@@ -39,17 +39,9 @@ class QuestionController extends ActionController
      */
     protected $questionRepository = null;
 
-    /**
-     * Injects the question-Repository
-     */
-    public function injectQuestionRepository(QuestionRepository $questionRepository)
+    public function __construct(protected readonly ModuleTemplateFactory $moduleTemplateFactory, \Fixpunkt\FpMasterquiz\Domain\Repository\QuestionRepository $questionRepository)
     {
         $this->questionRepository = $questionRepository;
-    }
-
-    public function __construct(
-        protected readonly ModuleTemplateFactory $moduleTemplateFactory,
-    ) {
     }
 
     public function initializeAction()

@@ -82,7 +82,7 @@ class QuizRepository extends Repository
             )
             ->setMaxResults(1)
             ->executeQuery();
-        while ($row = $statement->fetch()) {
+        while ($row = $statement->fetchAssociative()) {
             $uid = $row['uid'];
         }
         return $uid;

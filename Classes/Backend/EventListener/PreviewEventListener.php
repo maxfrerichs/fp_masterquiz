@@ -164,7 +164,7 @@ final class PreviewEventListener
 
         if (is_array($record)) {
             $data = '<span data-toggle="tooltip" data-placement="top" data-title="id=' . $record['uid'] . '">'
-                . $this->iconFactory->getIconForRecord($table, $record, Icon::SIZE_SMALL)->render()
+                . $this->iconFactory->getIconForRecord($table, $record, \TYPO3\CMS\Core\Imaging\IconSize::SMALL->value)->render()
                 . '</span> &nbsp;';
             $content = BackendUtilityCore::wrapClickMenuOnIcon($data, $table, $record['uid'], true, $record);
             $content .= htmlspecialchars(BackendUtilityCore::getRecordTitle($table, $record));

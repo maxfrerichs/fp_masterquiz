@@ -94,8 +94,13 @@ class QuizController extends ActionController
      */
     protected $persistenceManager;
 
-    public function __construct(protected readonly ModuleTemplateFactory $moduleTemplateFactory, private readonly LoggerInterface $logger)
+    public function __construct(protected readonly ModuleTemplateFactory $moduleTemplateFactory, private readonly LoggerInterface $logger, \Fixpunkt\FpMasterquiz\Domain\Repository\QuizRepository $quizRepository, \Fixpunkt\FpMasterquiz\Domain\Repository\AnswerRepository $answerRepository, \Fixpunkt\FpMasterquiz\Domain\Repository\SelectedRepository $selectedRepository, \Fixpunkt\FpMasterquiz\Domain\Repository\ParticipantRepository $participantRepository, \TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface $persistenceManager)
     {
+        $this->quizRepository = $quizRepository;
+        $this->answerRepository = $answerRepository;
+        $this->selectedRepository = $selectedRepository;
+        $this->participantRepository = $participantRepository;
+        $this->persistenceManager = $persistenceManager;
     }
 
     public function initializeIndexAction()
@@ -112,43 +117,6 @@ class QuizController extends ActionController
     {
         $this->id = (int)($this->request->getQueryParams()['id'] ?? 0);
         $this->moduleTemplate = $this->moduleTemplateFactory->create($this->request);
-    }
-
-    /**
-     * Injects the quiz-Repository
-     */
-    public function injectQuizRepository(QuizRepository $quizRepository)
-    {
-        $this->quizRepository = $quizRepository;
-    }
-
-    /**
-     * Injects the answer-Repository
-     */
-    public function injectAnswerRepository(AnswerRepository $answerRepository)
-    {
-        $this->answerRepository = $answerRepository;
-    }
-
-    /**
-     * Injects the selected-Repository
-     */
-    public function injectSelectedRepository(SelectedRepository $selectedRepository)
-    {
-        $this->selectedRepository = $selectedRepository;
-    }
-
-    /**
-     * Injects the participant-Repository
-     */
-    public function injectParticipantRepository(ParticipantRepository $participantRepository)
-    {
-        $this->participantRepository = $participantRepository;
-    }
-
-    public function injectPersistenceManager(PersistenceManagerInterface $persistenceManager)
-    {
-        $this->persistenceManager = $persistenceManager;
     }
 
     /**
@@ -198,8 +166,8 @@ class QuizController extends ActionController
         }
         if (!$quiz) {
             $this->addFlashMessage(
-                LocalizationUtility::translate('error.quizNotFound', 'fp_masterquiz') . ' uid=' . $defaultQuizUid,
-                LocalizationUtility::translate('error.error', 'fp_masterquiz'),
+                LocalizationUtility::translate('error.quizNotFound', 'FpMasterquiz') . ' uid=' . $defaultQuizUid,
+                LocalizationUtility::translate('error.error', 'FpMasterquiz'),
                 ContextualFeedbackSeverity::WARNING,
                 false
             );
@@ -1224,7 +1192,7 @@ class QuizController extends ActionController
         $statement = $queryBuilder->select('*')->from('fe_users')->where(
             $queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($userid, \PDO::PARAM_INT))
         )->setMaxResults(1)->executeQuery();
-        while ($row = $statement->fetch()) {
+        while ($row = $statement->fetchAssociative()) {
             return $row;
         }
         return [];
@@ -1387,8 +1355,8 @@ class QuizController extends ActionController
         if (is_array($storagePidsArray) && !$storagePidsArray[0] == 0) {
             if (!in_array($pid, $storagePidsArray)) {
                 $this->addFlashMessage(
-                    LocalizationUtility::translate('error.quizNotFound', 'fp_masterquiz') . ' pid=' . intval($pid),
-                    LocalizationUtility::translate('error.error', 'fp_masterquiz'),
+                    LocalizationUtility::translate('error.quizNotFound', 'FpMasterquiz') . ' pid=' . intval($pid),
+                    LocalizationUtility::translate('error.error', 'FpMasterquiz'),
                     ContextualFeedbackSeverity::WARNING,
                     false
                 );
@@ -1398,9 +1366,9 @@ class QuizController extends ActionController
         $defaultQuizUid = $this->getLocalizedDefaultQuiz();
         if ($defaultQuizUid && $uid != $defaultQuizUid) {
             $this->addFlashMessage(
-                LocalizationUtility::translate('error.quizNotAllowed', 'fp_masterquiz') . ' uid=' . intval($uid) .
+                LocalizationUtility::translate('error.quizNotAllowed', 'FpMasterquiz') . ' uid=' . intval($uid) .
                 '<>' .$defaultQuizUid .', pid=' . intval($pid),
-                LocalizationUtility::translate('error.error', 'fp_masterquiz'),
+                LocalizationUtility::translate('error.error', 'FpMasterquiz'),
                 ContextualFeedbackSeverity::WARNING,
                 false
             );
@@ -1449,8 +1417,8 @@ class QuizController extends ActionController
             } else {
                 $this->view->assign('quiz', 0);
                 $this->addFlashMessage(
-                    LocalizationUtility::translate('error.quizNotFound', 'fp_masterquiz') . ' ' . $defaultQuizUid,
-                    LocalizationUtility::translate('error.error', 'fp_masterquiz'),
+                    LocalizationUtility::translate('error.quizNotFound', 'FpMasterquiz') . ' ' . $defaultQuizUid,
+                    LocalizationUtility::translate('error.error', 'FpMasterquiz'),
                     ContextualFeedbackSeverity::WARNING,
                     false
                 );
@@ -1459,8 +1427,8 @@ class QuizController extends ActionController
             $this->view->assign('quiz', 0);
         }
         $uidOfCE = 0;
-        if (isset($this->configurationManager->getContentObject()->data['uid'])) {
-            $uidOfCE = $this->configurationManager->getContentObject()->data['uid'];
+        if (isset($this->request->getAttribute('currentContentObject')->data['uid'])) {
+            $uidOfCE = $this->request->getAttribute('currentContentObject')->data['uid'];
         }
         $this->view->assign('action', 'show');
         $this->view->assign('uidOfCE', $uidOfCE);
@@ -1566,8 +1534,8 @@ class QuizController extends ActionController
             $this->view->assign($key, $value);
         }
         $uidOfCE = 0;
-        if (isset($this->configurationManager->getContentObject()->data['uid'])) {
-            $uidOfCE = $this->configurationManager->getContentObject()->data['uid'];
+        if (isset($this->request->getAttribute('currentContentObject')->data['uid'])) {
+            $uidOfCE = $this->request->getAttribute('currentContentObject')->data['uid'];
         }
         $this->view->assign('pagesInclFinalPage', ($pages + 1));
         $this->view->assign('pageBasis', ($page - 1) * $this->settings['pagebrowser']['itemsPerPage']);
@@ -1705,8 +1673,8 @@ class QuizController extends ActionController
             $this->view->assign($key, $value);
         }
         $uidOfCE = 0;
-        if (isset($this->configurationManager->getContentObject()->data['uid'])) {
-            $uidOfCE = $this->configurationManager->getContentObject()->data['uid'];
+        if (isset($this->request->getAttribute('currentContentObject')->data['uid'])) {
+            $uidOfCE = $this->request->getAttribute('currentContentObject')->data['uid'];
         }
         $this->view->assign('pagesInclFinalPage', ($pages + 1));
         $this->view->assign('pageBasis', 0);
@@ -1888,8 +1856,8 @@ class QuizController extends ActionController
         $sys_language_uid = $languageAspect->getId();
         $pid = (int)$GLOBALS['TSFE']->id;
         $uidOfCE = 0;
-        if (isset($this->configurationManager->getContentObject()->data['uid'])) {
-            $uidOfCE = $this->configurationManager->getContentObject()->data['uid'];
+        if (isset($this->request->getAttribute('currentContentObject')->data['uid'])) {
+            $uidOfCE = $this->request->getAttribute('currentContentObject')->data['uid'];
         }
         $debug = $this->setAllUserAnswers($quiz, $pid, false);
         if ($this->settings['user']['useQuizPid']) {
@@ -1952,8 +1920,8 @@ class QuizController extends ActionController
         $pid = (int)$GLOBALS['TSFE']->id;
         $participants = $this->participantRepository->findFromQuizLimit($quiz->getUid(), intval($this->settings['highscoreLimit']));
         $uidOfCE = 0;
-        if (isset($this->configurationManager->getContentObject()->data['uid'])) {
-            $uidOfCE = $this->configurationManager->getContentObject()->data['uid'];
+        if (isset($this->request->getAttribute('currentContentObject')->data['uid'])) {
+            $uidOfCE = $this->request->getAttribute('currentContentObject')->data['uid'];
         }
         $this->view->assign('quiz', $quiz);
         $this->view->assign('participants', $participants);
@@ -1975,8 +1943,8 @@ class QuizController extends ActionController
             $this->view->assign('quiz', $participant->getQuiz());
         } else {
             $this->addFlashMessage(
-                LocalizationUtility::translate('error.invalidParameters', 'fp_masterquiz'),
-                LocalizationUtility::translate('error.error', 'fp_masterquiz'),
+                LocalizationUtility::translate('error.invalidParameters', 'FpMasterquiz'),
+                LocalizationUtility::translate('error.error', 'FpMasterquiz'),
                 ContextualFeedbackSeverity::WARNING,
                 false
             );
@@ -2025,8 +1993,8 @@ class QuizController extends ActionController
             $this->persistenceManager->persistAll();
             $updated = true;
             $this->addFlashMessage(
-                LocalizationUtility::translate('text.questionAdded', 'fp_masterquiz'),
-                LocalizationUtility::translate('text.updated', 'fp_masterquiz'),
+                LocalizationUtility::translate('text.questionAdded', 'FpMasterquiz'),
+                LocalizationUtility::translate('text.updated', 'FpMasterquiz'),
                 ContextualFeedbackSeverity::OK,
                 false
             );

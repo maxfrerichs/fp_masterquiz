@@ -164,8 +164,7 @@ class SwitchableControllerActionsPluginUpdater implements UpgradeWizardInterface
             ->from('tt_content')->where($queryBuilder->expr()->in(
             'list_type',
             $queryBuilder->createNamedParameter($checkListTypes, Connection::PARAM_STR_ARRAY)
-        ))->executeQuery()
-            ->fetchAll();
+        ))->executeQuery()->fetchAllAssociative();
     }
 
     protected function getTargetListType(string $sourceListType, string $switchableControllerActions): string

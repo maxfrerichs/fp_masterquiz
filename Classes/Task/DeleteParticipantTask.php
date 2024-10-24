@@ -113,7 +113,7 @@ class DeleteParticipantTask extends AbstractTask {
     		   		$queryBuilder->expr()->lt('crdate', $queryBuilder->createNamedParameter($past, \PDO::PARAM_INT))
     	   		)
     		   ->executeQuery();
-    		while ($row = $statement->fetch()) {
+    		while ($row = $statement->fetchAssociative()) {
     			$participantArray[] = $row['uid'];
     		}
     		foreach ($participantArray as $participantUid) {
@@ -148,7 +148,7 @@ class DeleteParticipantTask extends AbstractTask {
 		         $queryBuilder->expr()->lt('crdate', $queryBuilder->createNamedParameter($past, \PDO::PARAM_INT))
 		      )
 		      ->executeQuery();
-		    while ($row = $statement->fetch()) {
+		    while ($row = $statement->fetchAssociative()) {
 		        $selectedArray[] = $row['uid'];
 		    }
 		    

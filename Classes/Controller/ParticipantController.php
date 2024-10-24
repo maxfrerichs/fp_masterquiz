@@ -42,17 +42,9 @@ class ParticipantController extends ActionController
      */
     protected $participantRepository = null;
 
-    /**
-     * Injects the participant-Repository
-     */
-    public function injectParticipantRepository(ParticipantRepository $participantRepository)
+    public function __construct(protected readonly ModuleTemplateFactory $moduleTemplateFactory, \Fixpunkt\FpMasterquiz\Domain\Repository\ParticipantRepository $participantRepository)
     {
         $this->participantRepository = $participantRepository;
-    }
-
-    public function __construct(
-        protected readonly ModuleTemplateFactory $moduleTemplateFactory,
-    ) {
     }
 
     public function initializeAction()
